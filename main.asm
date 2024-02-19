@@ -9,6 +9,20 @@ Black_back_white_front equ 07h
 Border_height equ 14d
 Border_width  equ 12d
 
+End_of_int      macro
+    in al, 61h                          ; Blink hi bit of keyboard controller register
+    or al, 80h
+    out 61h, al
+    and al, not 80h
+    out 61h, al
+
+    mov al, 20h                         ; send end of interupt signal to interupt controller
+    out 20h, al
+
+    pop es bx ax
+    iret
+                endm
+
 org 100h
 Start:
 jmp main
@@ -58,26 +72,19 @@ Int_09         proc
     cmp al, 29h
     jne Skip_Border
 
-    cmp Active_flag, 0                 ; Check border already drawn
-    jne Skip_Border
-    mov Active_flag, 1d
-
     push 0b800h                  
     pop es
+
+    cmp al, Privious_key
+    je Skip_save
+
     call Save_page
+
+    Skip_save:
     call DisplayBorder
 
-    in al, 61h                          ; Blink hi bit of keyboard controller register
-    or al, 80h
-    out 61h, al
-    and al, not 80h
-    out 61h, al
-
-    mov al, 20h                         ; send end of interupt signal to interupt controller
-    out 20h, al
-
-    pop es bx ax
-    iret
+    mov Privious_key, al
+    End_of_int                          ; Blink hi bit of keyboard controller register and send end of interupt signal to interupt controller
 
     Skip_Border:
     cmp al, 29h + 128d
@@ -85,11 +92,13 @@ Int_09         proc
 
     call Repair_page
 
-    mov Active_flag, 0d
+    mov Privious_key, al
+    End_of_int                          ; Blink hi bit of keyboard controller register and send end of interupt signal to interupt controller
 
     Skip_clear:
 
     pop es bx ax
+    mov Privious_key, al
     db 0EAh                             ; call default interupt
     Old_int_offset  dw 0
     Old_int_segment dw 0

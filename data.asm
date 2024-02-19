@@ -3,7 +3,7 @@ Border_2:  db "/-\| |\-/", '$'
 Border_3:  db "+-+| |+-+" 
 Header_text db 10d,"Registers!", '$'
 
-Active_flag db 0d
+Privious_key db 0d
 
 Page_buffer dw (Border_height + 2) * (Border_width + 2) dup(?)
 
