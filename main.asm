@@ -1,59 +1,99 @@
 model tiny
 .386
 .code
+locals @@
+
+White_back_black_front equ 70h
+Black_back_white_front equ 07h
+
+Border_height equ 14d
+Border_width  equ 12d
+
 org 100h
 Start:
-;---------------------------------------
-; save old interupt function adress
-mov ax, 3509h
-int 21h
-mov cs:Old_int_offset, bx
-mov bx, es
-mov cs:Old_int_segment, bx
-;---------------------------------------
-; put new adress of interupt function in interupt table
-push 0                    
-pop es
-mov bx, 4 * 09h                         ; place of interupt 09h
-cli
-mov word ptr es:[bx], offset Int_09     ; new adress of int 09h function
-push cs
-pop ax
-mov es:[bx+2], ax
-sti
-;----------------------------------------
-; Exit process on resident mode
-mov ax, 3100h
-mov dx, offset End_of_programm
-shr dx, 4
-inc dx
-inc dx
-int 21h
-;----------------------------------------
+jmp main
+
+;--------------------------------
+include data.asm
+;--------------------------------
+include border.asm
+;--------------------------------
+include repair.asm
+;--------------------------------
+
+main            proc
+    ;---------------------------------------
+    ; save old interupt function adress
+    mov ax, 3509h
+    int 21h
+    mov cs:Old_int_offset, bx
+    mov bx, es
+    mov cs:Old_int_segment, bx
+    ;---------------------------------------
+    ; put new adress of interupt function in interupt table
+    push 0                    
+    pop es
+    mov bx, 4 * 09h                         ; place of interupt 09h
+    cli
+    mov word ptr es:[bx], offset Int_09     ; new adress of int 09h function
+    push cs
+    pop ax
+    mov es:[bx+2], ax
+    sti
+    ;----------------------------------------
+    ; Exit process on resident mode
+    mov ax, 3100h
+    mov dx, offset End_of_programm
+    shr dx, 4
+    inc dx
+    inc dx
+    int 21h
+    ;----------------------------------------
+                endp
 
 Int_09         proc
     push ax bx es                       ; save all registers
 
-    push 0b800h                         ; write symbol in the midle of page
-    pop es
-    mov bx, cs:PrintOfs
-    mov ah, 4eh
-    in al, 60h
-    mov es:[bx], ax
-    add bx, 2
+    in al, 60h                          ; check key 
+    cmp al, 29h
+    jne Skip_Border
 
-    and bx, 0ffh                        ; check that pointer not be bigger than 256d
-    mov cs:PrintOfs, bx
+    cmp Active_flag, 0                 ; Check border already drawn
+    jne Skip_Border
+    mov Active_flag, 1d
+
+    push 0b800h                  
+    pop es
+    call Save_page
+    call DisplayBorder
+
+    in al, 61h                          ; Blink hi bit of keyboard controller register
+    or al, 80h
+    out 61h, al
+    and al, not 80h
+    out 61h, al
+
+    mov al, 20h                         ; send end of interupt signal to interupt controller
+    out 20h, al
+
+    pop es bx ax
+    iret
+
+    Skip_Border:
+    cmp al, 29h + 128d
+    jne Skip_clear
+
+    call Repair_page
+
+    mov Active_flag, 0d
+
+    Skip_clear:
 
     pop es bx ax
     db 0EAh                             ; call default interupt
     Old_int_offset  dw 0
     Old_int_segment dw 0
                 endp
-
-.data
-    PrintOfs        dw 0
-.code
 
 End_of_programm:                        ; Lable in end of programm to solve size of code block
 end Start
