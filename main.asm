@@ -39,12 +39,19 @@ include to_hex.asm
 
 main            proc
     ;---------------------------------------
-    ; save old interupt function adress
+    ; save old interupt 09 function adress
     mov ax, 3509h
     int 21h
-    mov cs:Old_int_offset, bx
+    mov cs:Old_int_09_offset, bx
     mov bx, es
-    mov cs:Old_int_segment, bx
+    mov cs:Old_int_09_segment, bx
+    ;---------------------------------------
+    ; save old interupt 08 function adress
+    mov ax, 3509h
+    int 21h
+    mov cs:Old_int_08_offset, bx
+    mov bx, es
+    mov cs:Old_int_08_segment, bx
     ;---------------------------------------
     ; put new adress of interupt function in interupt table
     push 0                    
@@ -102,8 +109,26 @@ Int_09         proc
     mov Privious_key, al
     pop es bx ax
     db 0EAh                             ; call default interupt
-    Old_int_offset  dw 0
-    Old_int_segment dw 0
+    Old_int_09_offset  dw 0
+    Old_int_09_segment dw 0
+                endp
+
+Int_08          proc
+    push ax bx es
+
+    cmp Privious_key, 29h
+    jne @@Skip_draw
+
+    push 0b800h                  
+    pop es
+
+    call DisplayBorder
+
+    @@Skip_draw:
+    pop es bx ax
+    db 0EAh                             ; call default interupt
+    Old_int_08_offset  dw 0
+    Old_int_08_segment dw 0
                 endp
 
 End_of_programm:                        ; Lable in end of programm to solve size of code block
