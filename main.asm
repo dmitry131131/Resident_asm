@@ -6,7 +6,7 @@ locals @@
 White_back_black_front equ 70h
 Black_back_white_front equ 07h
 
-Border_height equ 14d
+Border_height equ 13d
 Border_width  equ 12d
 
 End_of_int      macro
@@ -33,6 +33,8 @@ include data.asm
 include border.asm
 ;--------------------------------
 include repair.asm
+;--------------------------------
+include to_hex.asm
 ;--------------------------------
 
 main            proc
@@ -97,8 +99,8 @@ Int_09         proc
 
     Skip_clear:
 
-    pop es bx ax
     mov Privious_key, al
+    pop es bx ax
     db 0EAh                             ; call default interupt
     Old_int_offset  dw 0
     Old_int_segment dw 0

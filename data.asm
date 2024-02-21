@@ -1,11 +1,7 @@
-Border_1:  db 0c9h, 0cdh, 0bbh, 0bah, 0b0h, 0bah, 0c8h, 0cdh, 0bch, '$'
-Border_2:  db "/-\| |\-/", '$'
-Border_3:  db "+-+| |+-+" 
-Header_text db 10d,"Registers!", '$'
+Border_1:  db 0c9h, 0cdh, 0bbh, 0bah, 0b0h, 0bah, 0c8h, 0cdh, 0bch, '$' ; First border style
 
-Privious_key db 0d
+Register_buffer db "ax0000bx0000cx0000dx0000si0000di0000sp0000bp0000ds0000es0000ss0000cs0000ip0000", '$'  ; Buffer for registers
 
-Page_buffer dw (Border_height + 2) * (Border_width + 2) dup(?)
+Privious_key db 0d                                                      ; The privious key scan-code
 
-Error_message db "Error!", '$'
-Clean_monitor db 80*24 dup(' '), '$'
+Page_buffer dw (Border_height + 2) * (Border_width + 2) dup(?)          ; Buffer for border background

@@ -26,24 +26,6 @@ Write_line          proc
     ret
                     endp
 
-; Write header on border
-Write_text_header   proc
-    push di cx ax
-    mov di, offset Header_text
-    mov cx, [di]
-    inc di
-
-    @@next:
-        mov al, [di]
-        mov es:[bx], al
-        inc di
-    loop @@next
-    add bx, 2d
-
-    pop ax cx di
-    ret
-                    endp
-
 ; Shift to the next line function
 ; Entry             BX - memory adress
 ; Destr             BX
@@ -60,22 +42,29 @@ Shift_to_next_line  proc
 ; Assumes           ES = 0b800h
 ; Destr             AX, BX, CX, DI
 DisplayBorder       proc
-    push ax bx cx di dx                    ; save registers
+    push ax bx cx di dx si              ; save registers
 
+    call Save_registers                 ; save registers in memory
+    
     mov di, offset Border_1             ; set default border settings
     mov ah, White_back_black_front
     mov bx, (1*80 + 65)*2
 
-    mov cx, Border_width
+    mov cx, Border_width                ; write first line
     call Write_line
 
+    mov si, offset Register_buffer      ; set SI on the start of the register buffer
     mov dx, Border_height
     @@next:
         dec dx
 
         mov cx, Border_width
         call Shift_to_next_line
-        call Write_line
+        call Write_line                 ; write line
+        
+        sub bx, 20d
+        call Write_register_value       ; write register string
+        add bx, 8d 
 
         sub di, 3d
     cmp dx, 0
@@ -83,9 +72,9 @@ DisplayBorder       proc
 
     add di, 3d
     mov cx, Border_width
-    call Shift_to_next_line
+    call Shift_to_next_line                   ; write last line
     call Write_line
 
-    pop dx di cx bx ax                     ; repair registers
+    pop si dx di cx bx ax                     ; repair registers
     ret
                     endp
