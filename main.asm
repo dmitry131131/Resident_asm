@@ -9,6 +9,9 @@ Black_back_white_front equ 07h
 Border_height equ 13d
 Border_width  equ 12d
 
+CS_adress equ 6d * 11d + 2d
+IP_adress equ 6d * 12d + 2d
+
 End_of_int      macro
     in al, 61h                          ; Blink hi bit of keyboard controller register
     or al, 80h
@@ -86,13 +89,13 @@ main            proc
                 endp
 
 Int_09         proc
-    push ax                       ; save all registers
+    push ax                             ; save all registers
 
     in al, 60h                          ; check key 
     cmp al, 29h
     jne Skip_Border
 
-    cmp cs:Activate_flag, 0d                ; If flag == 1
+    cmp cs:Activate_flag, 0d            ; If flag == 1
     jne Skip_save
     call Save_page                      ; saving background
 
@@ -100,7 +103,7 @@ Int_09         proc
 
     not cs:Activate_flag
 
-    cmp Activate_flag, 0d                ; if flag == 1 
+    cmp Activate_flag, 0d               ; if flag == 1 
     jne Skip_repair
 
     Skip_repair:
@@ -116,14 +119,16 @@ Int_09         proc
                 endp
 
 Int_08          proc
-    push es
+    push es                      
 
-    cmp cs:Activate_flag, 0
+    cmp cs:Activate_flag, 0             ; if flag == 0
     je @@Skip_draw
+
+    call Save_registers                 ; save registers in memory
 
     push 0b800h                         ; Display border       
     pop es
-    call DisplayBorder
+    call DisplayBorder                  ; display border
 
     @@Skip_draw:
     pop es

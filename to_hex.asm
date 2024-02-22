@@ -49,20 +49,47 @@ word_to_hex_str    proc
 
 ; Function save all register values into register buffer
 Save_registers      proc
-    push ax di                          ; save ax and di registers
-    call @@Current_ip
-    @@Current_ip:
-    push cs ss es ds bp sp di si dx cx bx ax        ; push all registers to stack
+
+    call Save_CS_IP                              ; save cs and ip
+
+    push ax cx di                                ; save ax and di registers
+    push ss es ds bp sp di si dx cx bx ax        ; push all registers to stack
 
     mov di, offset Register_buffer
-    mov cx, 13d
+    mov cx, 11d
     @@next:
         pop ax
         add di, 2d
         call word_to_hex_str
     loop @@next
 
-    pop di ax                           ; repair ax and di registers
+    pop di cx ax                                 ; repair ax, cx and di registers
+    ret
+                    endp
+
+; Save cs and ip registers
+Save_CS_IP          proc
+    push di bp ax
+    ;------------------------------------------------------------------
+    mov bp, sp                          ; get real cs position in stack
+    sub bp, 0d
+
+    mov ax, [bp]                        ; save cs value in ax register
+
+    mov di, offset Register_buffer      ; set di on cs position in buffer
+    add di, CS_adress
+
+    call word_to_hex_str                ; save cs in buffer
+
+    add di, 2d                          ; go to ip position in buffer
+    inc bp                              ; get real ip position in stack
+
+    mov ax, [bp]                        ; save ip value in ax register
+
+    call word_to_hex_str                ; save ip in in buffer
+
+    pop ax bp di
+    ;------------------------------------------------------------------
     ret
                     endp
 

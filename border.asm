@@ -42,8 +42,6 @@ Shift_to_next_line  proc
 ; Assumes           ES = 0b800h
 DisplayBorder       proc
     push ax bx cx di dx si              ; save registers
-
-    call Save_registers                 ; save registers in memory
     
     mov di, offset Border_1             ; set default border settings
     mov ah, White_back_black_front
