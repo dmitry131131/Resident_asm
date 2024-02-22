@@ -71,10 +71,10 @@ Save_registers      proc
 Save_CS_IP          proc
     push di bp ax
     ;------------------------------------------------------------------
-    mov bp, sp                          ; get real cs position in stack
-    sub bp, 0d
+    mov bp, sp                          ; get real cs position in stack         //BUG могут быть проблемы с cs и ip 
+    add bp, 14d
 
-    mov ax, [bp]                        ; save cs value in ax register
+    mov ax, word ptr [bp]               ; save cs value in ax register
 
     mov di, offset Register_buffer      ; set di on cs position in buffer
     add di, CS_adress
@@ -82,9 +82,9 @@ Save_CS_IP          proc
     call word_to_hex_str                ; save cs in buffer
 
     add di, 2d                          ; go to ip position in buffer
-    inc bp                              ; get real ip position in stack
+    sub bp, 2d                          ; get real ip position in stack
 
-    mov ax, [bp]                        ; save ip value in ax register
+    mov ax, word ptr [bp]               ; save ip value in ax register
 
     call word_to_hex_str                ; save ip in in buffer
 

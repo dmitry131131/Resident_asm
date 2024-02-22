@@ -45,10 +45,12 @@ DisplayBorder       proc
     
     mov di, offset Border_1             ; set default border settings
     mov ah, White_back_black_front
+    ;------------------------------------------
+    ; Write first line
     mov bx, (1*80 + 65)*2
-
-    mov cx, Border_width                ; write first line
+    mov cx, Border_width                ; write first line to the monitor
     call Write_line
+    ;------------------------------------------
 
     mov si, offset Register_buffer      ; set SI on the start of the register buffer
     mov dx, Border_height
