@@ -19,7 +19,7 @@ End_of_int      macro
     mov al, 20h                         ; send end of interupt signal to interupt controller
     out 20h, al
 
-    pop es bx ax
+    pop ax
     iret
                 endm
 
@@ -47,18 +47,29 @@ main            proc
     mov cs:Old_int_09_segment, bx
     ;---------------------------------------
     ; save old interupt 08 function adress
-    mov ax, 3509h
+    mov ax, 3508h
     int 21h
     mov cs:Old_int_08_offset, bx
     mov bx, es
     mov cs:Old_int_08_segment, bx
     ;---------------------------------------
-    ; put new adress of interupt function in interupt table
+    ; put new adress of interupt 9 function in interupt table
     push 0                    
     pop es
     mov bx, 4 * 09h                         ; place of interupt 09h
     cli
     mov word ptr es:[bx], offset Int_09     ; new adress of int 09h function
+    push cs
+    pop ax
+    mov es:[bx+2], ax
+    sti
+    ;----------------------------------------
+    ; put new adress of interupt 8 function in interupt table
+    push 0                    
+    pop es
+    mov bx, 4 * 08h                         ; place of interupt 09h
+    cli
+    mov word ptr es:[bx], offset Int_08     ; new adress of int 09h function
     push cs
     pop ax
     mov es:[bx+2], ax
@@ -75,57 +86,47 @@ main            proc
                 endp
 
 Int_09         proc
-    push ax bx es                       ; save all registers
+    push ax                       ; save all registers
 
     in al, 60h                          ; check key 
     cmp al, 29h
     jne Skip_Border
 
-    push 0b800h                  
-    pop es
-
-    cmp al, Privious_key
-    je Skip_save
-
-    call Save_page
+    cmp cs:Activate_flag, 0d                ; If flag == 1
+    jne Skip_save
+    call Save_page                      ; saving background
 
     Skip_save:
-    call DisplayBorder
 
-    mov Privious_key, al
+    not cs:Activate_flag
+
+    cmp Activate_flag, 0d                ; if flag == 1 
+    jne Skip_repair
+
+    Skip_repair:
+    call Repair_page
+
     End_of_int                          ; Blink hi bit of keyboard controller register and send end of interupt signal to interupt controller
 
     Skip_Border:
-    cmp al, 29h + 128d
-    jne Skip_clear
-
-    call Repair_page
-
-    mov Privious_key, al
-    End_of_int                          ; Blink hi bit of keyboard controller register and send end of interupt signal to interupt controller
-
-    Skip_clear:
-
-    mov Privious_key, al
-    pop es bx ax
+    pop ax
     db 0EAh                             ; call default interupt
     Old_int_09_offset  dw 0
     Old_int_09_segment dw 0
                 endp
 
 Int_08          proc
-    push ax bx es
+    push es
 
-    cmp Privious_key, 29h
-    jne @@Skip_draw
+    cmp cs:Activate_flag, 0
+    je @@Skip_draw
 
-    push 0b800h                  
+    push 0b800h                         ; Display border       
     pop es
-
     call DisplayBorder
 
     @@Skip_draw:
-    pop es bx ax
+    pop es
     db 0EAh                             ; call default interupt
     Old_int_08_offset  dw 0
     Old_int_08_segment dw 0

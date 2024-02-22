@@ -40,7 +40,6 @@ Shift_to_next_line  proc
 
 ; Write border in the midle on the monitor
 ; Assumes           ES = 0b800h
-; Destr             AX, BX, CX, DI
 DisplayBorder       proc
     push ax bx cx di dx si              ; save registers
 
