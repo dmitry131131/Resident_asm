@@ -4,7 +4,7 @@
 ; Destroy           AL
 number_to_hex_digit       proc
     add al,'0'              ;(0x30)
-    cmp al,'9'              ;(код 0x39)
+    cmp al,'9'              ;(0x39)
     jle @@end             
     add al,7                ;'A'-'F' Add 7 for 'A' - 'F' symbols
     @@end:
@@ -55,7 +55,7 @@ Save_registers      proc
     push ax cx di                                ; save ax and di registers
     push ss es ds bp sp di si dx cx bx ax        ; push all registers to stack
 
-    mov di, offset Register_buffer
+    mov di, offset Register_buffer               ; save 11 registers to register buffer
     mov cx, 11d
     @@next:
         pop ax
@@ -72,7 +72,7 @@ Save_CS_IP          proc
     push di bp ax
     ;------------------------------------------------------------------
     mov bp, sp                          ; get real cs position in stack         //BUG могут быть проблемы с cs и ip 
-    add bp, 14d
+    add bp, 12d
 
     mov ax, word ptr [bp]               ; save cs value in ax register
 
@@ -99,9 +99,9 @@ Save_CS_IP          proc
 ;
 ; Destroy               SI -> SI + 6
 Write_register_value    proc
-    push cx
+    push cx ax              ; save cx and ax
 
-    mov cx, 6d
+    mov cx, 6d              ; out 6 symbols from register buffer
     @@next:
         mov al, cs:[si]
         mov es:[bx], al
@@ -109,7 +109,7 @@ Write_register_value    proc
         add bx, 2d
     loop @@next
 
-    pop cx
+    pop ax cx               ; repair cx and ax
     ret
                         endp
 

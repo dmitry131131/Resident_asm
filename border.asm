@@ -31,10 +31,8 @@ Write_line          proc
 ; Destr             BX
 ; Return            BX position of the next line
 Shift_to_next_line  proc
-    sub bx, Border_width
-    sub bx, Border_width
-    sub bx, 4d
-    add bx, 160d
+    sub bx, (Border_width + 2) * 2d ; go to start of line
+    add bx, 160d                    ; go to next line
     ret
                     endp
 

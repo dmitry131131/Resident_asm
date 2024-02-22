@@ -2,16 +2,16 @@
 Save_page       proc
     push cx di si dx es ds              ; save registers
 
-    push cs         
+    push cs                             ; set es to current segment 
     pop es
-    push 0b800h
+    push 0b800h                         ; set ds to monitor segment
     pop ds
 
-    mov di, offset Page_buffer
-    mov si, (1*80 + 65)*2
+    mov di, offset Page_buffer          ; set di to Page buffer position
+    mov si, (1*80 + 65)*2               ; set si to left top corner of border
 
-    mov dl, Border_height + 2d
-    @@next:
+    mov dl, Border_height + 2d          ; set cout of lines
+    @@next:                             ; save display rectangle to the page buffer
         dec dl
         mov cx, Border_width + 2d
         rep movsw
@@ -54,16 +54,16 @@ ret
 Repair_page     proc
     push cx di si dx es ds              ; save registers
 
-    push cs         
+    push cs                             ; set ds to current segment 
     pop ds
-    push 0b800h
+    push 0b800h                         ; set es to monitor segment
     pop es
 
-    mov si, offset Page_buffer
-    mov di, (1*80 + 65)*2
+    mov si, offset Page_buffer          ; set si to Page buffer position
+    mov di, (1*80 + 65)*2               ; set di to left top corner of border
 
-    mov dl, Border_height + 2d
-    @@next:
+    mov dl, Border_height + 2d          ; set cout of lines
+    @@next:                             ; repair all border rectangle from page buffer
         dec dl
         mov cx, Border_width + 2d
         rep movsw

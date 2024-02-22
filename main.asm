@@ -10,7 +10,6 @@ Border_height equ 13d
 Border_width  equ 12d
 
 CS_adress equ 6d * 11d + 2d
-IP_adress equ 6d * 12d + 2d
 
 End_of_int      macro
     in al, 61h                          ; Blink hi bit of keyboard controller register
@@ -88,6 +87,7 @@ main            proc
     ;----------------------------------------
                 endp
 
+; New 09 interupt function
 Int_09         proc
     push ax                             ; save all registers
 
@@ -118,20 +118,21 @@ Int_09         proc
     Old_int_09_segment dw 0
                 endp
 
-Int_08          proc
-    push es                      
-
+; New 08 interupt function
+Int_08          proc                      
     cmp cs:Activate_flag, 0             ; if flag == 0
     je @@Skip_draw
 
     call Save_registers                 ; save registers in memory
 
+    push es                             ; save es
+
     push 0b800h                         ; Display border       
     pop es
     call DisplayBorder                  ; display border
 
+    pop es                              ; repair es
     @@Skip_draw:
-    pop es
     db 0EAh                             ; call default interupt
     Old_int_08_offset  dw 0
     Old_int_08_segment dw 0
