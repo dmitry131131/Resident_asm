@@ -2,96 +2,108 @@
 ; Entry             AL - Number (0-15)
 ; Return            AL - Number ('0'-'F')
 ; Destroy           AL
-number_to_hex_digit       proc
-    add al,'0'              ;(0x30)
-    cmp al,'9'              ;(0x39)
-    jle @@end             
-    add al,7                ;'A'-'F' Add 7 for 'A' - 'F' symbols
-    @@end:
+number_to_hex_digit     proc
 
-    ret
-                    endp
+                        add al, '0'              ; (0x30)
+                        cmp al, '9'              ; (0x39)
+                        jbe @@end             
+                        add al, 7                ; Add 7 for 'A' - 'F' symbols
+@@end:
+
+                        ret
+
+                        endp
 
 ; Function convert byte to HEX number text
 ; Entry             AL - byte
 ; Return            DI - buffer for string (2 symbols)
 ; Destroy           DI
-byte_to_hex_str    proc
-    push ax                 ; save ax
+byte_to_hex_str         proc
 
-    mov ah, al               ;save al in ah
-    shr al, 4                ; get hi digit
-    call number_to_hex_digit      
-    mov cs:[di], al             ;add to string
-    inc di                 
+                        push ax                     ; save ax
 
-    mov al,ah               ;repair al
-    and al, 0Fh              ;get low digit
-    call number_to_hex_digit       
-    mov cs:[di], al             ;add to string
-    inc di                 
+                        mov ah, al                  ; save al in ah
+                        shr al, 4                   ; get hi digit
+                        call number_to_hex_digit      
+                        mov cs:[di], al             ; add to string
+                        inc di                 
 
-    pop ax                  ; repair ax
-    ret
-                    endp
+                        mov al,ah                   ; repair al
+                        and al, 0Fh                 ; get low digit
+                        call number_to_hex_digit       
+                        mov cs:[di], al             ; add to string
+                        inc di                 
+
+                        pop ax                      ; repair ax
+
+                        ret
+
+                        endp
 
 ; Function convert word into HEX string
 ; Entry             AX - word
 ; Return            DI - buffer for string (4 symbols)
 ; Destroy           DI
-word_to_hex_str    proc
-    xchg ah,al              ;exchange ah and al
-    call byte_to_hex_str    
-    xchg ah,al              ;exchange ah and al
-    call byte_to_hex_str    
-    ret
-                    endp
+word_to_hex_str         proc
+
+                        xchg ah, al              ; exchange ah and al
+                        call byte_to_hex_str    
+                        xchg ah, al              ; exchange ah and al
+                        call byte_to_hex_str    
+                    
+                        ret
+
+                        endp
 
 ; Function save all register values into register buffer
-Save_registers      proc
+Save_registers          proc
 
-    call Save_CS_IP                              ; save cs and ip
+                        call Save_CS_IP                              ; save cs and ip
 
-    push ax cx di                                ; save ax and di registers
-    push ss es ds bp sp di si dx cx bx ax        ; push all registers to stack
+                        push ax cx di                                ; save ax and di registers
+                        push ss es ds bp sp di si dx cx bx ax        ; push all registers to stack
 
-    mov di, offset Register_buffer               ; save 11 registers to register buffer
-    mov cx, 11d
-    @@next:
-        pop ax
-        add di, 2d
-        call word_to_hex_str
-    loop @@next
+                        mov di, offset Register_buffer               ; save 11 registers to register buffer
+                        mov cx, 11d
+@@next:
+                        pop ax
+                        add di, 2d
+                        call word_to_hex_str
+                        loop @@next
 
-    pop di cx ax                                 ; repair ax, cx and di registers
-    ret
-                    endp
+                        pop di cx ax                                 ; repair ax, cx and di registers
+                        
+                        ret
+
+                        endp
 
 ; Save cs and ip registers
-Save_CS_IP          proc
-    push di bp ax
-    ;------------------------------------------------------------------
-    mov bp, sp                          ; get real cs position in stack         //BUG могут быть проблемы с cs и ip 
-    add bp, 12d
+Save_CS_IP              proc
 
-    mov ax, word ptr [bp]               ; save cs value in ax register
+                        push di bp ax                       ; save 
+                        
+                        mov bp, sp                          ; get real cs position in stack 
+                        add bp, 12d                         ; position of cs value in stack
 
-    mov di, offset Register_buffer      ; set di on cs position in buffer
-    add di, CS_adress
+                        mov ax, word ptr [bp]               ; save cs value in ax register
 
-    call word_to_hex_str                ; save cs in buffer
+                        mov di, offset Register_buffer      ; set di on cs position in buffer
+                        add di, CS_adress
 
-    add di, 2d                          ; go to ip position in buffer
-    sub bp, 2d                          ; get real ip position in stack
+                        call word_to_hex_str                ; save cs in register buffer
 
-    mov ax, word ptr [bp]               ; save ip value in ax register
+                        add di, 2d                          ; go to ip position in buffer
+                        sub bp, 2d                          ; get real ip position in stack
 
-    call word_to_hex_str                ; save ip in in buffer
+                        mov ax, word ptr [bp]               ; save ip value in ax register
 
-    pop ax bp di
-    ;------------------------------------------------------------------
-    ret
-                    endp
+                        call word_to_hex_str                ; save ip in register buffer
+
+                        pop ax bp di
+                        
+                        ret
+
+                        endp
 
 ; Function that outs register value
 ; Entry                 SI - position of 6 symbols
@@ -99,18 +111,20 @@ Save_CS_IP          proc
 ;
 ; Destroy               SI -> SI + 6
 Write_register_value    proc
-    push cx ax              ; save cx and ax
+                        push cx ax              ; save cx and ax
 
-    mov cx, 6d              ; out 6 symbols from register buffer
-    @@next:
-        mov al, cs:[si]
-        mov es:[bx], al
-        inc si
-        add bx, 2d
-    loop @@next
+                        mov cx, 6d              ; out 6 symbols from register buffer
+@@next:
+                        mov al, cs:[si]
+                        mov es:[bx], al
+                        inc si
+                        add bx, 2d
+                        loop @@next
 
-    pop ax cx               ; repair cx and ax
-    ret
+                        pop ax cx               ; repair cx and ax
+
+                        ret
+
                         endp
 
                     
